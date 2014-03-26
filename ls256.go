@@ -133,8 +133,7 @@ func CheckPath(pathname string, info os.FileInfo, err error) error {
 	return nil
 }
 
-func flag_setup() {
-
+func flagSetup() {
 	// -ext=".mp3" for example
 	if len(g_extFilter) > 0 {
 		doExtFilter = true
@@ -172,7 +171,7 @@ func main() {
 	if g_verboseFlag {
 		Verbose = true
 	}
-	flag_setup()
+	flagSetup()
 
 	// BUG(mdr): flag for relative path or flag for abs path?
 	pathName, err := filepath.Abs(flag.Arg(0))
