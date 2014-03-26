@@ -4,7 +4,7 @@
 // typical output:     6003568 | 9df360b8ec6a58f6cb410303c7794d98526cbfe2b11be7a34754515d0fcb21bb | 2013-07-03:09_03_57 | /home/mdr/Desktop/MYGO/src/vwar3/vwar3
 //
 // limitation - gathers filenames as an argument list before procesing.  Can exhaust memory if too many files
-// benefit - potentially allows use of progress bar since we know how many items are to be processed 
+// benefit - potentially allows use of progress bar since we know how many items are to be processed
 package main
 
 // BUG(mdr): count non-regular files and report
