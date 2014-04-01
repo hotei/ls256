@@ -4,14 +4,14 @@
 // typical output:     6003568 | 9df360b8ec6a58f6cb410303c7794d98526cbfe2b11be7a34754515d0fcb21bb | 2013-07-03:09_03_57 | /home/mdr/Desktop/MYGO/src/vwar3/vwar3
 //
 // limitation - gathers filenames as an argument list before procesing.  Can exhaust memory if too many files
-// benefit - potentially allows use of progress bar since we know how many items are to be processed
+//
 package main
 
 // BUG(mdr): count non-regular files and report
 // BUG(mdr): better report of bad date files
 
 import (
-	// go 1.2 pkgs
+	// go stdlib 1.2 pkgs
 	"flag"
 	"fmt"
 	"log"
@@ -47,10 +47,10 @@ var (
 	flagCPU       int // cpus requested on command line
 	g_argList     []string
 	g_verboseFlag bool
-	g_errCt       int
 	g_badDateCt   int
 	g_noSHAFlag   bool
 	doExtFilter   bool
+	g_LinksFlag   bool
 	g_extFilter   string
 	g_tmMutex     sync.Mutex
 	outPut        sync.WaitGroup
@@ -60,14 +60,25 @@ var (
 
 func init() {
 	flag.BoolVar(&g_verboseFlag, "verbose", false, "Verbose messages")
+	flag.BoolVar(&g_LinksFlag, "links", false, "Include directory link counts in output")
 	flag.BoolVar(&g_noSHAFlag, "nosha", false, "skip sha computation")
 	flag.IntVar(&flagCPU, "cpu", 0, "Number of CPU cores to use(default is all available)")
-	flag.StringVar(&g_extFilter, "ext", "", "Extension to match")
+	flag.StringVar(&g_extFilter, "ext", "", "Extension to match (default is all)")
 	g_argList = make([]string, 0, 10)
 }
 
 func usage() {
-	fmt.Printf("usage: ls256 path\n")
+	txt := `
+ls256 [OPTIONS] path
+
+OPTIONS:
+	-verbose               more intermediate messages
+	-nosha                 dont compute SHA256  (still does size date and name)
+	-cpu=n                 limit operation to n CPUs (default is all available)
+	-ext=".ext"            limit to files with this extension (default is all)
+	-links                 include directory link count in output	
+	`
+	fmt.Printf("%s\n", txt)
 	os.Exit(0)
 }
 
@@ -107,12 +118,14 @@ func CheckPath(pathname string, info os.FileInfo, err error) error {
 			fmt.Printf("found a .gvfs dir (remote filesystem) - skipping it\n")
 			return filepath.SkipDir
 		}
-		nlinks, err := mdr.FileLinkCt(pathname)
-		if err != nil {
-			fmt.Printf("# err %s getting link ct for %s\n", pathname)
-			return nil
+		if g_LinksFlag {
+			nlinks, err := mdr.FileLinkCt(pathname)
+			if err != nil {
+				fmt.Printf("# err %s getting link ct for %s\n", pathname)
+				return nil
+			}
+			fmt.Printf("# dirLinks | %d | %s\n", nlinks, pathname)
 		}
-		fmt.Printf("# dirLinks | %d | %s\n", nlinks, pathname)
 		mdr.Spinner()
 	} else { // regular file
 		fmode := info.Mode()
@@ -154,7 +167,7 @@ func flagSetup() {
 		if flagCPU < 0 {
 			nCPU = 1
 		}
-	} else { // default to MAX or 1 ?
+	} else { // default to MAX
 		nCPU = NUM_CORES
 	}
 	Verbose.Printf("setting GOMAXPROCS to %d (nCPU)\n", nCPU)
@@ -173,7 +186,7 @@ func main() {
 	}
 	flagSetup()
 
-	// BUG(mdr): flag for relative path or flag for abs path?
+	// BUG(mdr): TODO? flag for relative path or flag for abs path?
 	pathName, err := filepath.Abs(flag.Arg(0))
 	if err != nil {
 		log.Fatalf("cant get absolute path for %s\n", flag.Arg(0))
@@ -197,7 +210,7 @@ func main() {
 	filepath.Walk(pathName, CheckPath) // builds g_argList
 	var filesProcessed int64 = 0
 	var bytesProcessed int64 = 0
-	fmt.Fprintf(os.Stderr, "nCPU = %d\n", nCPU)
+	fmt.Fprintf(os.Stderr, "# nCPU = %d\n", nCPU)
 	throttle := make(chan int, nCPU)
 	startTime := time.Now()
 	for _, fname := range g_argList {
@@ -216,7 +229,7 @@ func main() {
 			tmp.fileDate = stats.ModTime()
 			if tmp.fileDate.After(startTime) {
 				fmt.Printf("# bad date %s for %s\n", tmp.fileDate.String(), fullpath)
-				// BUG(mdr): save bad dates in a list for appending?
+				// BUG(mdr): TODO? save bad dates in a list for appending
 				g_badDateCt++
 			}
 			if g_noSHAFlag {
@@ -241,12 +254,12 @@ func main() {
 	doneRec.pathname = ""
 	lo <- doneRec
 	outPut.Wait()
-	time.Sleep(1 * time.Second) // not really necessary
+	//time.Sleep(1 * time.Second) // not necessary
 	// wrapup
 	elapsedTime := time.Now().Sub(startTime)
 	elapsedSeconds := elapsedTime.Seconds()
 	fmt.Printf("# %s Rundate=%s\n", G_version, startTime.String())
 	fmt.Printf("# Processed %s files with %s bytes in %s for %.2g bytes/sec\n",
 		mdr.CommaFmtInt64(filesProcessed), mdr.CommaFmtInt64(bytesProcessed), mdr.HumanTime(elapsedTime), float32(bytesProcessed)/float32(elapsedSeconds))
-	fmt.Printf("# nCPU[%d]  Errors[%d]  BadDates[%d]\n", nCPU, g_errCt, g_badDateCt)
+	fmt.Printf("# nCPU[%d]  BadDates[%d]\n", nCPU, g_badDateCt)
 }
