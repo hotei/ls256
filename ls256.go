@@ -27,18 +27,6 @@ import (
 	"github.com/hotei/mdr"
 )
 
-type VerboseType bool
-
-var (
-	Verbose VerboseType
-)
-
-func (v VerboseType) Printf(s string, a ...interface{}) {
-	if v {
-		fmt.Printf(s, a...)
-	}
-}
-
 const (
 	G_version = "ls256.go   (c) 2013-2014 David Rook version 0.0.4"
 )
@@ -121,7 +109,7 @@ func CheckPath(pathname string, info os.FileInfo, err error) error {
 		if g_LinksFlag {
 			nlinks, err := mdr.FileLinkCt(pathname)
 			if err != nil {
-				fmt.Printf("# err %s getting link ct for %s\n", pathname)
+				fmt.Printf("# err %v getting link ct for %s\n", err, pathname)
 				return nil
 			}
 			fmt.Printf("# dirLinks | %d | %s\n", nlinks, pathname)
