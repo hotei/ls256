@@ -4,7 +4,7 @@
 </center>
 
 License details are at the end of this document. 
-This document is (c) 2014-2015 David Rook.
+This document is (c) 2014 David Rook.
 
 Comments can be sent to <hotei1352@gmail.com>
 
@@ -57,6 +57,7 @@ OPTIONS:
 	-nosha                 dont compute SHA256  (still does size date and name)
 	-cpu=n                 limit operation to n CPUs (default is all available)
 	-ext=".ext"            limit to files with this extension (default is all)
+	-links                 include directory link count in output
 
 ```
 
@@ -88,7 +89,7 @@ go get github.com/hotei/ls256
 
 The 'ls256' go package and demo programs are distributed under the Simplified BSD License:
 
-> Copyright (c) 2014-2015 David Rook. All rights reserved.
+> Copyright (c) 2014 David Rook. All rights reserved.
 > 
 > Redistribution and use in source and binary forms, with or without modification, are
 > permitted provided that the following conditions are met:

@@ -8,10 +8,12 @@
 package main
 
 // BUG(mdr): count non-regular files and report
-// BUG(mdr): better report of bad date files
+// BUG(mdr): better report of bad date files - or save in logfile?
+// BUG(mdr): we're ignoring this for now 	-links  directory link count in output	
+//	flag.BoolVar(&g_LinksFlag, "links", false, "Include directory link counts in output")
 
 import (
-	// go stdlib 1.2 pkgs
+	// go stdlib 1.4.2 pkgs
 	"flag"
 	"fmt"
 	"log"
@@ -28,7 +30,7 @@ import (
 )
 
 const (
-	G_version = "ls256.go   (c) 2013-2014 David Rook version 0.0.4"
+	G_version = "ls256.go   (c) 2013-2015 David Rook version 0.0.5"
 )
 
 var (
@@ -48,7 +50,6 @@ var (
 
 func init() {
 	flag.BoolVar(&g_verboseFlag, "verbose", false, "Verbose messages")
-	flag.BoolVar(&g_LinksFlag, "links", false, "Include directory link counts in output")
 	flag.BoolVar(&g_noSHAFlag, "nosha", false, "skip sha computation")
 	flag.IntVar(&flagCPU, "cpu", 0, "Number of CPU cores to use(default is all available)")
 	flag.StringVar(&g_extFilter, "ext", "", "Extension to match (default is all)")
@@ -64,7 +65,6 @@ OPTIONS:
 	-nosha                 dont compute SHA256  (still does size date and name)
 	-cpu=n                 limit operation to n CPUs (default is all available)
 	-ext=".ext"            limit to files with this extension (default is all)
-	-links                 include directory link count in output	
 	`
 	fmt.Printf("%s\n", txt)
 	os.Exit(0)
